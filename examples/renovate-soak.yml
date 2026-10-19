@@ -1,0 +1,28 @@
+name: Renovate soak
+
+# Holds updates of images outside Docker Hub as bare branches for 3 days (preset github>Noctran/.github:soak).
+# The logic lives in Noctran/.github (actions/renovate-soak); Renovate keeps the pin below current.
+on:
+  push:
+    branches: ["renovate/**"]
+  schedule:
+    - cron: "23 */3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: renovate-soak
+  cancel-in-progress: false
+
+jobs:
+  soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # contents to compare branches (private repositories), statuses for renovate-soak, issues for the ledger.
+    permissions:
+      contents: read
+      statuses: write
+      issues: write
+    steps:
+      - uses: Noctran/.github/actions/renovate-soak@<commit-sha> # main

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Noctran's shared Renovate defaults: conventional commits, merge commits, a 3-day soak, minor/patch of 1.x+ automerged once checks are green, every major behind Dependency Dashboard approval. Extend with github>Noctran/.github:renovate-config; repositories with container images also extend github>Noctran/.github:soak.",
+  "extends": [
+    "config:recommended",
+    ":enablePreCommit",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "semanticCommits": "enabled",
+  "automergeStrategy": "merge-commit",
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "vulnerabilityAlerts": {
+    "labels": ["security"]
+  },
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions minor/patch updates",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "github-actions minor/patch"
+    },
+    {
+      "description": "Group pre-commit hook minor/patch updates",
+      "matchManagers": ["pre-commit"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "pre-commit minor/patch"
+    },
+    {
+      "description": "Minor/patch updates of 1.x+ dependencies automerge once checks are green; 0.x makes no compatibility promise, so it waits for a human",
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^v?0\\./",
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Every major waits for Dependency Dashboard approval and is never automerged (Homelab #729)",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
+}

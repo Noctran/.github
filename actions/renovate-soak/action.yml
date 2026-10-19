@@ -1,0 +1,24 @@
+name: Renovate soak
+description: >-
+  Sets the renovate-soak commit status on every renovate/ branch: pending until a change to an image outside
+  Docker Hub is SOAK_DAYS old, success otherwise. First-seen times live in one ledger comment on the
+  Dependency Dashboard. Pair with the soak preset (github>Noctran/.github:soak).
+inputs:
+  soak-days:
+    description: Days a change waits before its status turns green.
+    default: "3"
+  token:
+    description: Token with statuses and issues write on the calling repository.
+    default: ${{ github.token }}
+runs:
+  using: composite
+  steps:
+    - name: Set the renovate-soak status on every Renovate branch
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        GH_REPO: ${{ github.repository }}
+        SOAK_DAYS: ${{ inputs.soak-days }}
+      # The script ships with this action, never with the caller's branch: an update must not be able to
+      # rewrite the check that holds it back.
+      run: python3 -I "$GITHUB_ACTION_PATH/renovate_soak.py"

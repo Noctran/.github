@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "3-day soak for container images outside Docker Hub, which have no release dates in Renovate. Needs the renovate-soak caller workflow in the repository: without it these branches never get a pull request.",
+  "packageRules": [
+    {
+      "description": "Images outside Docker Hub: no timestamp, so the renovate-soak branch status is the soak and the PR opens only after it",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["/^[^/]+\\.[^/]+\\//", "!/^docker\\.io\\//"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "prCreation": "not-pending",
+      "platformAutomerge": false,
+      "prBodyNotes": [
+        "This image comes from a registry without release dates, so Renovate could not hold it back for the 3-day soak. The `renovate-soak` status did instead: this pull request opened only after the change was 3 days old, and an automerge-eligible update merges on a Renovate run once its checks are green."
+      ]
+    }
+  ]
+}
