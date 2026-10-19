@@ -1,0 +1,18 @@
+# Ruff settings for the Python in this repository (the renovate-soak action's script). Target and line length
+# match Noctran/Homelab's pyproject.toml, where the script came from; the rule set is a subset of Homelab's.
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = [
+  "F",   # pyflakes: undefined names, unused imports and variables
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "I",   # import order
+  "UP",  # pyupgrade: syntax the target Python already has
+  "B",   # flake8-bugbear: likely bugs
+  "DTZ", # naive datetimes
+  "ISC", # implicit string concatenation (a missing comma in a list)
+  "RET", # return statements
+  "SIM", # simplifiable code
+]
