@@ -23,3 +23,10 @@ A project repository's `renovate.json5`:
 
 `actions/renovate-soak/renovate_soak.py` is a copy of Homelab's `scripts/utils/renovate_soak.py` at
 commit 1cec803; once Homelab uses this action, its own copy goes.
+
+## Checks
+
+`.github/workflows/ci.yml` runs on every pull request and push to main: the soak script's self-test, ruff
+(`ruff.toml`) and Renovate's config validator on both presets. Repositories pin the action to a commit and
+extend the presets from main, so change main through a pull request with CI green. This repository's own
+`renovate.json` extends its preset, so Renovate keeps the CI pins current once the App is installed here.
