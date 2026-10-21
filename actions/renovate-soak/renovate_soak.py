@@ -82,12 +82,22 @@ def registry_host(image_ref):
     return None
 
 
-def needs_soak(lines):
-    """True when an added line names an image on a registry other than Docker Hub (no release dates there)."""
+def parse_exempt(text):
+    """The caller's exempt prefixes, one per line (the action's `exempt` input); blank lines and `#` lines skipped."""
+    stripped = (line.strip() for line in (text or "").splitlines())
+    return tuple(line for line in stripped if line and not line.startswith("#"))
+
+
+def needs_soak(lines, exempt=()):
+    """True when an added line names an image on a registry other than Docker Hub (no release dates there).
+
+    An image whose reference starts with one of the `exempt` prefixes never needs the soak: the caller's own
+    releases, which the soak protects nothing against (for example `registry.example.com/myapp/`)."""
     for line in lines:
         for match in IMAGE_REF_RE.finditer(line):
-            host = registry_host(match.group("ref"))
-            if host and host not in DOCKER_HUB_HOSTS:
+            image_ref = match.group("ref")
+            host = registry_host(image_ref)
+            if host and host not in DOCKER_HUB_HOSTS and not image_ref.startswith(exempt):
                 return True
     return False
 
@@ -175,6 +185,7 @@ def find_dashboard(repo):
 def main():
     repo = os.environ["GH_REPO"]
     soak_days = int(os.environ.get("SOAK_DAYS", "3"))
+    exempt = parse_exempt(os.environ.get("SOAK_EXEMPT"))
     bot_login = os.environ.get("SOAK_BOT_LOGIN", "github-actions[bot]")
     now = dt.datetime.now(dt.UTC).replace(microsecond=0)
     default_branch = gh_api(f"repos/{repo}")["default_branch"]
@@ -194,9 +205,14 @@ def main():
             failures += 1
             print(f"::error::{branch}: gh api failed: {error.stderr.strip()}")
             continue
-        if not needs_soak(lines):
+        if not needs_soak(lines, exempt):
             statuses.append(
-                (branch, sha, "success", "No soak needed: Renovate's own minimumReleaseAge covers this update")
+                (
+                    branch,
+                    sha,
+                    "success",
+                    "No soak needed: Renovate's own minimumReleaseAge covers this update, or the caller exempts it",
+                )
             )
             continue
         change_fingerprint = fingerprint(lines)
@@ -246,6 +262,13 @@ def self_test():
     expect(not needs_soak(["FROM alpine:3.24@sha256:" + "c" * 64]))
     expect(needs_soak(["FROM --platform=linux/arm64 ghcr.io/actions/actions-runner:2.330.0"]))
     expect(not needs_soak(["uses: actions/checkout@abc # v7", "rev: v1.2.3"]))
+    exempt = parse_exempt("\n# own releases\nregistry.int.cloudking.at/sleepcalcweb/\n")
+    expect(exempt == ("registry.int.cloudking.at/sleepcalcweb/",), exempt)
+    own_release = ["    image: registry.int.cloudking.at/sleepcalcweb/sleepcalcweb-backend:0.2.0@sha256:" + "d" * 64]
+    expect(needs_soak(own_release))
+    expect(not needs_soak(own_release, exempt))
+    expect(needs_soak(["    image: registry.int.cloudking.at/other/app:1.0"], exempt))
+    expect(needs_soak(own_release + compose_patch[:1], exempt))
     expect(registry_host("localhost:5000/app:1") == "localhost:5000")
     expect(fingerprint(compose_patch) == fingerprint(list(reversed(compose_patch))))
     expect(fingerprint(compose_patch) != fingerprint(compose_patch[:1]))
