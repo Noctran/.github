@@ -7,6 +7,12 @@ inputs:
   soak-days:
     description: Days a change waits before its status turns green.
     default: "3"
+  exempt:
+    description: >-
+      Image reference prefixes that never soak, one per line (for example `registry.example.com/myapp/`): the
+      caller's own releases, which a soak protects nothing against. Pair with prCreation=immediate for the same
+      images in the caller's Renovate config, or their PR still waits for this status.
+    default: ""
   token:
     description: Token with statuses and issues write on the calling repository.
     default: ${{ github.token }}
@@ -19,6 +25,7 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
         GH_REPO: ${{ github.repository }}
         SOAK_DAYS: ${{ inputs.soak-days }}
+        SOAK_EXEMPT: ${{ inputs.exempt }}
       # The script ships with this action, never with the caller's branch: an update must not be able to
       # rewrite the check that holds it back.
       run: python3 -I "$GITHUB_ACTION_PATH/renovate_soak.py"

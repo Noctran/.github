@@ -10,7 +10,7 @@ community-health fallback for repositories that carry no files of their own.
 |------|---------|
 | `renovate-config.json` | Default preset. Renovate offers it automatically when it onboards a repository. Extend with `github>Noctran/.github:renovate-config`. |
 | `soak.json` | 3-day soak for images outside Docker Hub, which have no release dates. Extend with `github>Noctran/.github:soak` only together with the caller workflow, or those updates never get a pull request. |
-| `actions/renovate-soak/` | Composite action that sets the `renovate-soak` status on every `renovate/` branch. |
+| `actions/renovate-soak/` | Composite action that sets the `renovate-soak` status on every `renovate/` branch. Input `exempt`: image prefixes that never soak (a repository's own releases), one per line; pair it with `prCreation: 'immediate'` for the same images in that repository's Renovate config. |
 | `examples/renovate-soak.yml` | The caller workflow each repository with the soak preset carries in `.github/workflows/`; replace `<commit-sha>` with a commit of this repository. |
 
 A project repository's `renovate.json5`:
